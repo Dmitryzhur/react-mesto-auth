@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import Header from './Header';
+// import Header from './Header';
 import Main from './Main';
-import Footer from './Footer';
+// import Footer from './Footer';
 import ImagePopup from './ImagePopup';
 import CurrentUserContext from '../contexts/CurrentUserContext';
 import api from "../utils/Api";
@@ -9,6 +9,10 @@ import EditProfilePopup from "./EditProfilePopup";
 import EditAvatarPopup from "./EditAvatarPopup";
 import AddPlacePopup from "./AddPlacePopup";
 // import PopupWithForm from "./PopupWithForm";
+import { Route, Switch } from 'react-router-dom';
+import ProtectedRoute from "./ProtectedRoute";
+import Login from "./Login";
+import Register from "./Register";
 
 function App() {
 	const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = useState(false);
@@ -19,6 +23,8 @@ function App() {
 	const [currentUser, setCurrentUser] = useState({});
 	const [cards, setCardsList] = useState([]);
 	// const [isLoading, setLoading] = useState(true);
+
+	const [loggedIn, setLoggedIn] = useState(false);
 
 	useEffect(() => {
 		// setLoading(true);
@@ -113,7 +119,27 @@ function App() {
 	return (
 		<CurrentUserContext.Provider value={currentUser} >
 			<div className="page">
-				<Header />
+				<Switch>
+					<ProtectedRoute exact
+						path="/"
+						loggedIn={loggedIn}
+						component={Main}
+						onEditAvatar={onEditAvatar}
+						onEditProfile={onEditProfile}
+						onAddPlace={onAddPlace}
+						onCardClick={setSelectedCard}
+						cards={cards}
+						onCardLike={onCardLike}
+						onCardDelete={onCardDelete}
+					/>
+					<Route path="/sign-in">
+						<Login />
+					</Route>
+					<Route path="/sign-up">
+						<Register />
+					</Route>
+				</Switch>
+
 				<Main
 					onEditAvatar={onEditAvatar}
 					onEditProfile={onEditProfile}
@@ -123,7 +149,6 @@ function App() {
 					onCardLike={onCardLike}
 					onCardDelete={onCardDelete}
 				/>
-				<Footer />
 
 				<EditAvatarPopup
 					isOpen={isEditAvatarPopupOpen}
