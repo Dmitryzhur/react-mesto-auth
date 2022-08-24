@@ -13,18 +13,21 @@ import { Route, Switch } from 'react-router-dom';
 import ProtectedRoute from "./ProtectedRoute";
 import Login from "./Login";
 import Register from "./Register";
+import InfoTooltip from "./InfoTooltip";
+import auth from "../utils/Auth";
 
 function App() {
 	const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = useState(false);
 	const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = useState(false);
 	const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false);
 	// const [isDeletePlacePopupOpen, setIsDeletePlacePopupOpen] = useState(false);
+	const [isPopupWithoutFormOpen, setisPopupWithoutFormOpen] = useState(false);
 	const [selectedCard, setSelectedCard] = useState({});
 	const [currentUser, setCurrentUser] = useState({});
 	const [cards, setCardsList] = useState([]);
 	// const [isLoading, setLoading] = useState(true);
 
-	const [loggedIn, setLoggedIn] = useState(false);
+	const [isloggedIn, setIsLoggedIn] = useState(false);
 
 	useEffect(() => {
 		// setLoading(true);
@@ -108,13 +111,62 @@ function App() {
 	// 	setIsDeletePlacePopupOpen(!isDeletePlacePopupOpen);
 	// }
 
+	const onAnswerLoggIn = () => {
+		setisPopupWithoutFormOpen(!isPopupWithoutFormOpen);
+	}
+
 	const closeAllPopups = () => {
 		setIsEditProfilePopupOpen(false);
 		setIsAddPlacePopupOpen(false);
 		setIsEditAvatarPopupOpen(false);
 		// setIsDeletePlacePopupOpen(false);
+		setisPopupWithoutFormOpen(false);
 		setSelectedCard({});
 	}
+
+	// // Проверка токенов
+
+	// constructor(props){
+	// 	super(props);
+	// 	this.state = {
+	// 		loggedIn: false
+	// 	}
+	// 	this.tokenCheck = this.tokenCheck.bind(this);
+	// 	this.handleLogin = this.handleLogin.bind(this);
+	// }
+	// componentDidMount() {
+	// 	// настало время проверить токен
+	// 	this.tokenCheck();
+	// };
+	// handleLogin(){
+	// 	this.setState({
+	// 		loggedIn: true
+	// 	})
+	// }
+	// tokenCheck() {
+	// 	// если у пользователя есть токен в localStorage,
+	// 	// эта функция проверит валидность токена 
+	// 	const jwt = localStorage.getItem('jwt');
+	// 	if (jwt) {
+	// 		// проверим токен
+	// 		duckAuth.getContent(jwt).then((res) => {
+	// 			if (res) {
+	// 				// здесь можем получить данные пользователя!
+	// 				const userData = {
+	// 					username: res.username,
+	// 					email: res.email
+	// 				}
+	// 				// поместим их в стейт внутри App.js
+	// 				this.setState({
+	// 					loggedIn: true,
+	// 					userData
+	// 				}, () => {
+	// 					this.props.history.push("/ducks");
+	// 				});
+	// 			}
+	// 		});
+	// 	}
+	// }
 
 	return (
 		<CurrentUserContext.Provider value={currentUser} >
@@ -122,7 +174,8 @@ function App() {
 				<Switch>
 					<ProtectedRoute exact
 						path="/"
-						loggedIn={loggedIn}
+						loggedIn={isloggedIn}
+						// userData={userData}
 						component={Main}
 						onEditAvatar={onEditAvatar}
 						onEditProfile={onEditProfile}
@@ -140,7 +193,7 @@ function App() {
 					</Route>
 				</Switch>
 
-				<Main
+				{/* <Main
 					onEditAvatar={onEditAvatar}
 					onEditProfile={onEditProfile}
 					onAddPlace={onAddPlace}
@@ -148,7 +201,12 @@ function App() {
 					cards={cards}
 					onCardLike={onCardLike}
 					onCardDelete={onCardDelete}
-				/>
+				/> */}
+
+				<InfoTooltip
+					isOpen={isPopupWithoutFormOpen}
+					onClose={closeAllPopups}
+					answer={isloggedIn} />
 
 				<EditAvatarPopup
 					isOpen={isEditAvatarPopupOpen}

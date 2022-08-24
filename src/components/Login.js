@@ -1,8 +1,26 @@
-import { Link } from 'react-router-dom';
+import { Link, withRouter } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
 
 function Login() {
+
+	// handleSubmit(e){
+	// 	e.preventDefault();
+	// 	if (!this.state.username || !this.state.password) {
+	// 		return;
+	// 	}
+	// 	duckAuth.authorize(this.state.username, this.state.password)
+	// 		.then((data) => {
+	// 			if (data.jwt) {
+	// 				this.setState({ username: '', password: '' }, () => {
+	// 					this.props.handleLogin();
+	// 					this.props.history.push('/ducks');
+	// 				})
+	// 			}
+	// 		})
+	// 		.catch(err => console.log(err)); // запускается, если пользователь не найден
+	// }
+
 	return (
 		<>
 			<Header
@@ -32,9 +50,8 @@ function Login() {
 					<button className="auth__button" type="submit">Войти</button>
 				</form>
 			</section>
-			<Footer />
 		</>
 	)
 };
 
-export default Login;
+export default withRouter(Login);
