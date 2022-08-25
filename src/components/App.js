@@ -1,19 +1,16 @@
 import { useState, useEffect } from "react";
-// import Header from './Header';
+import { Route, Switch, useHistory } from 'react-router-dom';
 import Main from './Main';
-// import Footer from './Footer';
 import ImagePopup from './ImagePopup';
 import CurrentUserContext from '../contexts/CurrentUserContext';
-import api from "../utils/Api";
 import EditProfilePopup from "./EditProfilePopup";
 import EditAvatarPopup from "./EditAvatarPopup";
 import AddPlacePopup from "./AddPlacePopup";
-// import PopupWithForm from "./PopupWithForm";
-import { Route, Switch } from 'react-router-dom';
 import ProtectedRoute from "./ProtectedRoute";
 import Login from "./Login";
 import Register from "./Register";
 import InfoTooltip from "./InfoTooltip";
+import api from "../utils/Api";
 import auth from "../utils/Auth";
 
 function App() {
@@ -21,13 +18,10 @@ function App() {
 	const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = useState(false);
 	const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false);
 	// const [isDeletePlacePopupOpen, setIsDeletePlacePopupOpen] = useState(false);
-	const [isPopupWithoutFormOpen, setisPopupWithoutFormOpen] = useState(false);
 	const [selectedCard, setSelectedCard] = useState({});
 	const [currentUser, setCurrentUser] = useState({});
 	const [cards, setCardsList] = useState([]);
 	// const [isLoading, setLoading] = useState(true);
-
-	const [isloggedIn, setIsLoggedIn] = useState(false);
 
 	useEffect(() => {
 		// setLoading(true);
@@ -111,8 +105,75 @@ function App() {
 	// 	setIsDeletePlacePopupOpen(!isDeletePlacePopupOpen);
 	// }
 
-	const onAnswerLoggIn = () => {
-		setisPopupWithoutFormOpen(!isPopupWithoutFormOpen);
+	const [isPopupWithoutFormOpen, setisPopupWithoutFormOpen] = useState(false);
+	const [isloggedIn, setLoggedIn] = useState(false);
+	const [userData, setUserData] = useState("");
+	const history = useHistory();
+
+	function handleRegisterUser(data) {
+		auth.register(data)
+			.then((res) => {
+				handlePopupWithoutFormOpen(true);
+				return res;
+			})
+			.then(() => history.push('/sign-in'))
+			.catch((err) => {
+				handlePopupWithoutFormOpen(false);
+				console.log(err);
+			})
+	}
+
+	function handleLoginUser(data) {
+		auth.authorize(data)
+			.then((res) => {
+				if (res.token) {
+					localStorage.setItem('jwt', res.token);
+					setLoggedIn(true);
+					setUserData({
+						'email': data.email,
+					});
+					history.push('/');
+				} else {
+					return;
+				}
+			})
+			.catch((err) => {
+				handlePopupWithoutFormOpen(false);
+				console.log(err);
+			})
+	}
+
+	function tokenCheck() {
+		const jwt = localStorage.getItem("jwt");
+		if (jwt) {
+			auth.getContent(jwt)
+				.then((data) => {
+					if (data) {
+						setUserData({
+							'email': data.data.email,
+						})
+						setLoggedIn(true)
+						history.push('/')
+					}
+				})
+				.catch((err) => {
+					console.log(err);
+				})
+		}
+	}
+
+	useEffect(() => {
+		tokenCheck();
+	}, [])
+
+	function logout() {
+		localStorage.setItem('token', '');
+		setLoggedIn(false);
+	}
+
+	function handlePopupWithoutFormOpen(result) {
+		setLoggedIn(result);
+		setisPopupWithoutFormOpen(true);
 	}
 
 	const closeAllPopups = () => {
@@ -124,50 +185,6 @@ function App() {
 		setSelectedCard({});
 	}
 
-	// // Проверка токенов
-
-	// constructor(props){
-	// 	super(props);
-	// 	this.state = {
-	// 		loggedIn: false
-	// 	}
-	// 	this.tokenCheck = this.tokenCheck.bind(this);
-	// 	this.handleLogin = this.handleLogin.bind(this);
-	// }
-	// componentDidMount() {
-	// 	// настало время проверить токен
-	// 	this.tokenCheck();
-	// };
-	// handleLogin(){
-	// 	this.setState({
-	// 		loggedIn: true
-	// 	})
-	// }
-	// tokenCheck() {
-	// 	// если у пользователя есть токен в localStorage,
-	// 	// эта функция проверит валидность токена 
-	// 	const jwt = localStorage.getItem('jwt');
-	// 	if (jwt) {
-	// 		// проверим токен
-	// 		duckAuth.getContent(jwt).then((res) => {
-	// 			if (res) {
-	// 				// здесь можем получить данные пользователя!
-	// 				const userData = {
-	// 					username: res.username,
-	// 					email: res.email
-	// 				}
-	// 				// поместим их в стейт внутри App.js
-	// 				this.setState({
-	// 					loggedIn: true,
-	// 					userData
-	// 				}, () => {
-	// 					this.props.history.push("/ducks");
-	// 				});
-	// 			}
-	// 		});
-	// 	}
-	// }
-
 	return (
 		<CurrentUserContext.Provider value={currentUser} >
 			<div className="page">
@@ -175,7 +192,7 @@ function App() {
 					<ProtectedRoute exact
 						path="/"
 						loggedIn={isloggedIn}
-						// userData={userData}
+						userData={userData}
 						component={Main}
 						onEditAvatar={onEditAvatar}
 						onEditProfile={onEditProfile}
@@ -184,24 +201,15 @@ function App() {
 						cards={cards}
 						onCardLike={onCardLike}
 						onCardDelete={onCardDelete}
+						onClick={logout}
 					/>
 					<Route path="/sign-in">
-						<Login />
+						<Login onLoginUser={handleLoginUser} />
 					</Route>
 					<Route path="/sign-up">
-						<Register />
+						<Register onRegisterUser={handleRegisterUser} />
 					</Route>
 				</Switch>
-
-				{/* <Main
-					onEditAvatar={onEditAvatar}
-					onEditProfile={onEditProfile}
-					onAddPlace={onAddPlace}
-					onCardClick={setSelectedCard}
-					cards={cards}
-					onCardLike={onCardLike}
-					onCardDelete={onCardDelete}
-				/> */}
 
 				<InfoTooltip
 					isOpen={isPopupWithoutFormOpen}

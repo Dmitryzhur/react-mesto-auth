@@ -4,12 +4,17 @@ import Card from "./Card";
 import Header from './Header';
 import Footer from './Footer';
 
-function Main({ onEditAvatar, onEditProfile, onAddPlace, onCardClick, cards, onCardLike, onCardDelete }) {
+function Main({ onEditAvatar, onEditProfile, onAddPlace, onCardClick, cards, onCardLike, onCardDelete, userData, onClick }) {
 	const currentUser = useContext(CurrentUserContext);
 
 	return (
 		<>
-			<Header />
+			<Header
+				buttonText={'Выйти'}
+				headerLink={'/sign-in'}
+				children={userData.email}
+				onClick={onClick}
+			/>
 			<main className="content">
 				<section className="profile">
 					<div className="profile__avatar-info">
