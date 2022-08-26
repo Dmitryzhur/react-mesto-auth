@@ -22,17 +22,89 @@ function App() {
 	const [currentUser, setCurrentUser] = useState({});
 	const [cards, setCardsList] = useState([]);
 	// const [isLoading, setLoading] = useState(true);
+	const [isPopupWithoutFormOpen, setisPopupWithoutFormOpen] = useState(false);
+	const [isloggedIn, setLoggedIn] = useState(false);
+	const [userData, setUserData] = useState("");
+	const history = useHistory();
 
 	useEffect(() => {
-		// setLoading(true);
-		Promise.all([api.getUser(), api.getCards()])
-			.then(([userData, initialCards]) => {
-				setCurrentUser(userData);
-				setCardsList(initialCards);
+		tokenCheck();
+	}, [])
+
+	function tokenCheck() {
+		const jwt = localStorage.getItem("jwt");
+		if (jwt) {
+			auth.getContent(jwt)
+				.then((data) => {
+					if (data) {
+						setUserData({
+							'email': data.data.email,
+						})
+						setLoggedIn(true)
+						history.push('/')
+					}
+				})
+				.catch((err) => {
+					console.log(err);
+				})
+		}
+	}
+
+	function handleRegisterUser(data) {
+		auth.register(data)
+			.then((res) => {
+				handlePopupWithoutFormOpen(true);
+				return res;
 			})
-			.catch((err) => { console.log(err) })
-		// .finally(() => setLoading(false))
-	}, []);
+			.then(() => history.push('/sign-in'))
+			.catch((err) => {
+				handlePopupWithoutFormOpen(false);
+				console.log(err);
+			})
+	}
+
+	function handleLoginUser(data) {
+		auth.authorize(data)
+			.then((res) => {
+				if (res.token) {
+					localStorage.setItem('jwt', res.token);
+					setLoggedIn(true);
+					setUserData({
+						'email': data.email,
+					});
+					history.push('/');
+				} else {
+					return;
+				}
+			})
+			.catch((err) => {
+				handlePopupWithoutFormOpen(false);
+				console.log(err);
+			})
+	}
+
+	function logOut() {
+		localStorage.setItem('jwt', '');
+		setLoggedIn(false);
+	}
+
+	function handlePopupWithoutFormOpen(result) {
+		setLoggedIn(result);
+		setisPopupWithoutFormOpen(true);
+	}
+
+	useEffect(() => {
+		if (isloggedIn) {
+			// setLoading(true);
+			Promise.all([api.getUser(), api.getCards()])
+				.then(([userData, initialCards]) => {
+					setCurrentUser(userData);
+					setCardsList(initialCards);
+				})
+				.catch((err) => { console.log(err) })
+			// .finally(() => setLoading(false))
+		}
+	}, [isloggedIn]);
 
 	function handleUpdateUser(data) {
 		api.editProfile(data)
@@ -105,77 +177,6 @@ function App() {
 	// 	setIsDeletePlacePopupOpen(!isDeletePlacePopupOpen);
 	// }
 
-	const [isPopupWithoutFormOpen, setisPopupWithoutFormOpen] = useState(false);
-	const [isloggedIn, setLoggedIn] = useState(false);
-	const [userData, setUserData] = useState("");
-	const history = useHistory();
-
-	function handleRegisterUser(data) {
-		auth.register(data)
-			.then((res) => {
-				handlePopupWithoutFormOpen(true);
-				return res;
-			})
-			.then(() => history.push('/sign-in'))
-			.catch((err) => {
-				handlePopupWithoutFormOpen(false);
-				console.log(err);
-			})
-	}
-
-	function handleLoginUser(data) {
-		auth.authorize(data)
-			.then((res) => {
-				if (res.token) {
-					localStorage.setItem('jwt', res.token);
-					setLoggedIn(true);
-					setUserData({
-						'email': data.email,
-					});
-					history.push('/');
-				} else {
-					return;
-				}
-			})
-			.catch((err) => {
-				handlePopupWithoutFormOpen(false);
-				console.log(err);
-			})
-	}
-
-	function tokenCheck() {
-		const jwt = localStorage.getItem("jwt");
-		if (jwt) {
-			auth.getContent(jwt)
-				.then((data) => {
-					if (data) {
-						setUserData({
-							'email': data.data.email,
-						})
-						setLoggedIn(true)
-						history.push('/')
-					}
-				})
-				.catch((err) => {
-					console.log(err);
-				})
-		}
-	}
-
-	useEffect(() => {
-		tokenCheck();
-	}, [])
-
-	function logout() {
-		localStorage.setItem('token', '');
-		setLoggedIn(false);
-	}
-
-	function handlePopupWithoutFormOpen(result) {
-		setLoggedIn(result);
-		setisPopupWithoutFormOpen(true);
-	}
-
 	const closeAllPopups = () => {
 		setIsEditProfilePopupOpen(false);
 		setIsAddPlacePopupOpen(false);
@@ -201,7 +202,7 @@ function App() {
 						cards={cards}
 						onCardLike={onCardLike}
 						onCardDelete={onCardDelete}
-						onClick={logout}
+						onClick={logOut}
 					/>
 					<Route path="/sign-in">
 						<Login onLoginUser={handleLoginUser} />
